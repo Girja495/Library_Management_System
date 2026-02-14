@@ -2,146 +2,120 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Product Filter</title>
+<title>SVG Drawing Tool</title>
 
 <style>
     body{
         margin:0;
-        font-family:'Segoe UI',sans-serif;
-        background:linear-gradient(135deg,#667eea,#764ba2);
-        min-height:100vh;
+        height:100vh;
+        font-family:Segoe UI, sans-serif;
+        background:linear-gradient(135deg,#89f7fe,#66a6ff);
         display:flex;
         justify-content:center;
         align-items:center;
     }
 
-    .container{
+    .app{
         background:#fff;
         width:900px;
-        padding:25px;
         border-radius:15px;
-        box-shadow:0 15px 40px rgba(0,0,0,0.2);
+        box-shadow:0 20px 40px rgba(0,0,0,0.25);
+        padding:20px;
     }
 
     h2{
         text-align:center;
-        margin-bottom:20px;
-        color:#333;
+        margin-bottom:15px;
     }
 
-    .controls{
+    .toolbar{
         display:flex;
+        gap:15px;
         justify-content:center;
-        margin-bottom:25px;
+        margin-bottom:15px;
     }
 
-    select{
-        padding:10px 15px;
-        font-size:16px;
+    input[type="color"],button{
+        padding:8px 12px;
         border-radius:8px;
-        border:1px solid #ccc;
-        outline:none;
+        border:none;
         cursor:pointer;
-        transition:0.3s;
+        font-size:14px;
     }
 
-    select:hover{
-        border-color:#764ba2;
+    button{
+        background:#ff4d4d;
+        color:white;
     }
 
-    .products{
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-        gap:20px;
-    }
-
-    .product{
-        background:#f9f9f9;
+    svg{
+        background:#f7f7f7;
+        width:100%;
+        height:450px;
         border-radius:12px;
-        padding:20px;
-        text-align:center;
-        transition:0.3s;
-        cursor:pointer;
-    }
-
-    .product:hover{
-        transform:translateY(-6px);
-        box-shadow:0 10px 25px rgba(0,0,0,0.15);
-    }
-
-    .product h3{
-        margin:10px 0;
-        color:#333;
-    }
-
-    .price{
-        color:#764ba2;
-        font-weight:bold;
-        font-size:18px;
+        cursor:crosshair;
     }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h2>🛍️ Product Store</h2>
+<div class="app">
+    <h2>🖌️ SVG Drawing Tool</h2>
 
-    <div class="controls">
-        <select id="sort">
-            <option value="default">Sort Products</option>
-            <option value="priceLow">Price: Low → High</option>
-            <option value="priceHigh">Price: High → Low</option>
-            <option value="name">Name: A → Z</option>
-        </select>
+    <div class="toolbar">
+        <label>Color:
+            <input type="color" id="color" value="#000000">
+        </label>
+        <button id="clear">Clear</button>
     </div>
 
-    <div class="products" id="products">
-        <div class="product" data-price="300" data-name="Shoes">
-            👟
-            <h3>Shoes</h3>
-            <p class="price">₹300</p>
-        </div>
-
-        <div class="product" data-price="150" data-name="Cap">
-            🧢
-            <h3>Cap</h3>
-            <p class="price">₹150</p>
-        </div>
-
-        <div class="product" data-price="500" data-name="Jacket">
-            🧥
-            <h3>Jacket</h3>
-            <p class="price">₹500</p>
-        </div>
-
-        <div class="product" data-price="250" data-name="Tshirt">
-            👕
-            <h3>T-Shirt</h3>
-            <p class="price">₹250</p>
-        </div>
-    </div>
+    <svg id="canvas"></svg>
 </div>
 
 <script>
-    const sort=document.getElementById("sort");
-    const products=document.getElementById("products");
+    const svg=document.getElementById("canvas");
+    const colorPicker=document.getElementById("color");
+    const clearBtn=document.getElementById("clear");
 
-    sort.addEventListener("change",()=>{
-        const items=[...products.children];
+    let drawing=false;
+    let path=null;
 
-        if(sort.value==="priceLow"){
-            items.sort((a,b)=>a.dataset.price-b.dataset.price);
-        }
-        else if(sort.value==="priceHigh"){
-            items.sort((a,b)=>b.dataset.price-a.dataset.price);
-        }
-        else if(sort.value==="name"){
-            items.sort((a,b)=>a.dataset.name.localeCompare(b.dataset.name));
-        }
+    svg.addEventListener("mousedown",(e)=>{
+        drawing=true;
 
-        items.forEach(item=>products.appendChild(item));
+        path=document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("stroke",colorPicker.value);
+        path.setAttribute("stroke-width","3");
+        path.setAttribute("fill","none");
+
+        const point=getPoint(e);
+        path.setAttribute("d",`M ${point.x} ${point.y}`);
+        svg.appendChild(path);
     });
+
+    svg.addEventListener("mousemove",(e)=>{
+        if(!drawing) return;
+
+        const point=getPoint(e);
+        const d=path.getAttribute("d");
+        path.setAttribute("d",`${d} L ${point.x} ${point.y}`);
+    });
+
+    svg.addEventListener("mouseup",()=>drawing=false);
+    svg.addEventListener("mouseleave",()=>drawing=false);
+
+    clearBtn.addEventListener("click",()=>{
+        svg.innerHTML="";
+    });
+
+    function getPoint(e){
+        const rect=svg.getBoundingClientRect();
+        return{
+            x:e.clientX-rect.left,
+            y:e.clientY-rect.top
+        };
+    }
 </script>
 
 </body>
